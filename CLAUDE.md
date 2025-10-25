@@ -144,12 +144,41 @@ Add new shadcn components using the shadcn CLI (ensure you have it installed glo
 
 Note: CSS variables are used throughout the application, allowing for consistent theming and easy dark mode switching.
 
+### Analytics System
+
+The home page (`src/app/page.tsx`) displays a comprehensive analytics dashboard with:
+- **AnalyticsDashboard** (`src/components/main/analytics-dashboard.tsx`): Main dashboard component featuring:
+  - Four summary cards (Total Posts, Total Likes, Total Comments, Average Engagement Ratio)
+  - Area chart showing engagement ratio trends per platform over time
+  - Stacked bar chart comparing likes and comments per platform
+  - Line chart tracking likes trends across platforms monthly
+  - Summary table with platform-specific metrics
+  - Responsive 2-column grid layout on desktop
+  - Custom tooltips for all charts with small, readable text
+
+- **AnalyticsCard** (`src/components/main/analytics-card.tsx`): Reusable card component for metrics display with:
+  - Optional trend indicators (up/down with percentage)
+  - Icon and title support
+  - Subtitle for additional context
+
+- **Analytics Library** (`src/lib/analytics.ts`): Core calculation engine providing:
+  - `calculateAnalytics(posts)`: Main aggregation function returning Analytics interface
+  - Quantitative metrics: totalPosts, totalLikes, totalComments, growth percentages
+  - Qualitative metrics: averageEngagementRatio, platform-specific engagement data
+  - Chart data generation:
+    - `engagementRatioTrend`: Monthly engagement ratio per platform (for area chart)
+    - `likesCommentsStackedByPlatform`: Total likes/comments per platform (for stacked bar)
+    - `likesByPlatformTrend`: Monthly likes per platform (for line chart)
+  - All calculations are deterministic and use proper null checks
+
 ### Data Flow
 
 This is currently a client-side focused application. Most components use `"use client"` directive. Server components are available but not heavily utilized yet. When adding data fetching:
 - Use Server Components for data fetching where possible
 - Use client components for interactivity (forms, animations, state)
 - Follow Next.js 16 App Router conventions for data fetching and caching
+
+**Dashboard Data Flow**: Home page fetches posts from all platforms (Instagram, Facebook, TikTok, LinkedIn), adds platform field during aggregation, and passes unified array to AnalyticsDashboard for rendering.
 
 ## Important Notes
 
@@ -165,6 +194,25 @@ This is currently a client-side focused application. Most components use `"use c
 - Portuguese language used throughout the UI for form labels, buttons, and messages
 
 ## Key Implementation Patterns
+
+### Page Headers
+Use the `PageHeader` component from `@/components/layout/page-header` for all page titles:
+```typescript
+import { PageHeader } from "@/components/layout/page-header";
+
+<PageHeader
+  title="Dashboard"
+  description="Análise qualitativa de performance e engajamento"
+  onNewClick={handleNewPost}
+  newButtonLabel="Novo Post"
+>
+  {/* Optional children for additional controls like search/filters */}
+</PageHeader>
+```
+- **Title**: `text-xl font-bold` - Consistent sizing across all pages
+- **Description**: `text-xs text-muted-foreground` - Supporting text
+- **Optional**: New button with Plus icon, optional children slots
+- All pages use this single component for visual consistency
 
 ### Sidebar State Management
 The sidebar uses React Context (`SidebarContext`) for state management. To access sidebar state in components:
@@ -183,6 +231,34 @@ const form = useForm({
     // Handle form submission
   }
 });
+```
+
+### Chart Implementation with Recharts
+Charts follow a consistent pattern with:
+- **Container**: `div className="w-full h-60"` for fixed, compact heights
+- **Legend**: `wrapperStyle={{ paddingTop: "4px", fontSize: "12px" }} height={18}` - small, readable text
+- **Axes**: `tick={{ fontSize: 10 }} width={30}` (YAxis) - compact axis labels
+- **Custom Tooltips**: Small text (10px-12px) with minimal padding for clarity
+- **Colors**: Use hardcoded hex values for consistency (chart1: #ec4899, chart2: #3b82f6, chart3: #06b6d4, chart4: #ef4444)
+- **Card Container**: `p-4` padding with `space-y-2` gaps between title and chart
+
+Example minimal chart pattern:
+```typescript
+<div className="bg-card border border-border rounded-lg p-4">
+  <h2 className="text-sm font-semibold text-foreground mb-2">Chart Title</h2>
+  <div className="w-full h-60">
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
+        <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+        <YAxis tick={{ fontSize: 10 }} width={30} />
+        <Tooltip content={<CustomTooltip />} />
+        <Legend wrapperStyle={{ paddingTop: "4px", fontSize: "12px" }} height={18} />
+        <Bar dataKey="value" fill="#ec4899" />
+      </BarChart>
+    </ResponsiveContainer>
+  </div>
+</div>
 ```
 
 ### CSS Variables in Components

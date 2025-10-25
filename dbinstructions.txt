@@ -1,0 +1,211 @@
+==========================
+✅ BETTER AUTH + SQLITE SETUP GUIDE
+==========================
+
+📦 1. Install dependencies
+--------------------------
+npm install better-auth better-sqlite3 @better-auth/react
+
+(optional for scripts)
+npm install -D tsx typescript
+
+----------------------------------
+📁 2. Project folder structure
+----------------------------------
+src/
+  lib/
+    auth.ts
+  app/
+    api/
+      auth/
+        [...all]/
+          route.ts
+  components/
+  ...
+scripts/
+  createAdmin.ts
+
+
+==========================
+⚙️ 3. Configure Better Auth
+==========================
+
+File: src/lib/auth.ts
+----------------------------------
+import Database from "better-sqlite3";
+import { betterAuth } from "better-auth";
+import { hashPassword } from "better-auth/utils";
+import { randomUUID } from "crypto";
+
+const db = new Database("./auth.db");
+db.pragma("journal_mode = WAL");
+
+// Optional: ensure admin user exists on startup
+(async () => {
+  const email = "admin@example.com";
+  const password = "Admin123!";
+  const hashed = await hashPassword(password);
+
+  const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(email);
+  if (!existing) {
+    db.prepare(
+      `INSERT INTO users (id, email, password_hash, role, created_at, updated_at)
+       VALUES (@id, @email, @password_hash, @role, datetime('now'), datetime('now'))`
+    ).run({
+      id: randomUUID(),
+      email,
+      password_hash: hashed,
+      role: "admin",
+    });
+    console.log("✅ Default admin user created");
+  }
+})();
+
+export const auth = betterAuth({
+  database: db,
+  emailAndPassword: { enabled: true },
+  session: { expiresIn: "7d" },
+  trustedOrigins: ["http://localhost:3000"],
+});
+
+
+==========================
+🌐 4. Setup Next.js API route
+==========================
+
+File: src/app/api/auth/[...all]/route.ts
+----------------------------------
+import { auth } from "@/lib/auth";
+import { toNextJsHandler } from "better-auth/next-js";
+
+export const { GET, POST } = toNextJsHandler(auth);
+
+
+==========================
+💾 5. (Optional) One-time Admin Script
+==========================
+
+If you prefer to manually seed the admin user instead of auto-creating on startup:
+
+File: scripts/createAdmin.ts
+----------------------------------
+import Database from "better-sqlite3";
+import { hashPassword } from "better-auth/utils";
+import { randomUUID } from "crypto";
+
+const db = new Database("./auth.db");
+db.pragma("journal_mode = WAL");
+
+async function main() {
+  const email = "admin@example.com";
+  const password = "Admin123!";
+  const hashed = await hashPassword(password);
+
+  const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(email);
+  if (existing) {
+    console.log("✅ Admin already exists");
+    return;
+  }
+
+  db.prepare(
+    `INSERT INTO users (id, email, password_hash, role, created_at, updated_at)
+     VALUES (@id, @email, @password_hash, @role, datetime('now'), datetime('now'))`
+  ).run({
+    id: randomUUID(),
+    email,
+    password_hash: hashed,
+    role: "admin",
+  });
+
+  console.log("✅ Admin user created successfully");
+}
+
+main().catch(console.error);
+
+----------------------------------
+Run it once:
+npx tsx scripts/createAdmin.ts
+
+
+==========================
+🧪 6. Test Auth Endpoints
+==========================
+
+Start your app:
+npm run dev
+
+Test routes:
+- POST /api/auth/signup
+- POST /api/auth/signin
+- GET  /api/auth/session
+
+Login with:
+email: admin@example.com
+password: Admin123!
+
+
+==========================
+🧠 7. Example client usage
+==========================
+
+File: src/app/page.tsx
+----------------------------------
+"use client";
+import { useAuth } from "@better-auth/react";
+
+export default function HomePage() {
+  const { signIn, signOut, user, session } = useAuth();
+
+  if (!session) {
+    return (
+      <button
+        onClick={() =>
+          signIn.emailAndPassword({
+            email: "admin@example.com",
+            password: "Admin123!",
+          })
+        }
+      >
+        Sign in as Admin
+      </button>
+    );
+  }
+
+  return (
+    <div>
+      <p>Welcome, {user?.email}</p>
+      <button onClick={() => signOut()}>Sign out</button>
+    </div>
+  );
+}
+
+
+==========================
+🔒 8. Protect admin routes
+==========================
+
+Example server route:
+----------------------------------
+import { auth } from "@/lib/auth";
+import { NextResponse } from "next/server";
+
+export async function GET() {
+  const session = await auth.api.getSession();
+
+  if (!session?.user || session.user.role !== "admin") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  return NextResponse.json({ message: "Welcome, admin!" });
+}
+
+
+==========================
+✅ Done!
+==========================
+Now you can:
+- Seed an admin user (auto or via script)
+- Sign in using /api/auth/signin
+- Use @better-auth/react on client
+- Protect routes by role
+- Everything stored locally in auth.db

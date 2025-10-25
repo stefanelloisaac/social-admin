@@ -9,6 +9,7 @@ import {
   Briefcase,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { LogoutButton } from "@/components/theme/logout-button";
 import Link from "next/link";
 
 export function AppSidebar() {
@@ -55,14 +56,7 @@ export function AppSidebar() {
           {/* Bottom Section - Fixed Height */}
           <div className="flex flex-col gap-3 shrink-0 border-t border-border pt-4">
             <ThemeToggle />
-            <SidebarLink
-              link={{
-                label: "Sair",
-                href: "#",
-                icon: <LogOut className="text-neutral-700 dark:text-neutral-200 h-5 w-5 shrink-0" />,
-              }}
-              className="bg-secondary hover:bg-secondary/80 border-secondary"
-            />
+            <LogoutButton />
           </div>
         </div>
       </SidebarBody>

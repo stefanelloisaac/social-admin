@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "../providers/theme.provider";
-import { AppSidebar } from "@/components/layout/app-sidebar";
 
 export const metadata: Metadata = {
   title: "Social Admin",
@@ -23,12 +22,7 @@ export default function RootLayout({
           enableSystem
           defaultTheme="light"
         >
-          <div className="flex h-screen overflow-hidden">
-            <AppSidebar />
-            <main className="flex-1 overflow-y-auto">
-              {children}
-            </main>
-          </div>
+          {children}
         </ThemeProvider>
       </body>
     </html>
