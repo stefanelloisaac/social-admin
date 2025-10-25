@@ -1,14 +1,7 @@
 import type { Metadata } from "next";
-import { Montserrat } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "../providers/theme.provider";
 import { AppSidebar } from "@/components/layout/app-sidebar";
-
-const montserrat = Montserrat({
-  variable: "--font-sans",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-});
 
 export const metadata: Metadata = {
   title: "Social Admin",
@@ -22,12 +15,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <body className={`${montserrat.variable} antialiased font-sans`}>
+      <body className="font-sans antialiased">
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          storageKey="social-admin-theme"
           disableTransitionOnChange
+          enableSystem
+          defaultTheme="light"
         >
           <div className="flex h-screen overflow-hidden">
             <AppSidebar />

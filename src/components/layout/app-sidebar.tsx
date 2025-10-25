@@ -6,8 +6,10 @@ import {
   Facebook,
   Music,
   LogOut,
+  Briefcase,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
+import Link from "next/link";
 
 export function AppSidebar() {
   const links = [
@@ -26,19 +28,25 @@ export function AppSidebar() {
       href: "/tiktok",
       icon: <Music className="text-neutral-700 dark:text-neutral-200 h-5 w-5 shrink-0" />,
     },
+    {
+      label: "LinkedIn",
+      href: "/linkedin",
+      icon: <Briefcase className="text-neutral-700 dark:text-neutral-200 h-5 w-5 shrink-0" />,
+    },
   ];
 
   return (
     <Sidebar>
       <SidebarBody className="px-3 py-4">
         <div className="flex flex-col h-full">
-          {/* Logo Section - Fixed Height */}
-          <div className="h-16 flex items-center justify-center md:justify-start">
-            <Logo />
+          <div className="h-10 flex items-center justify-center md:justify-start">
+            <Link href="/">
+              <Logo />
+            </Link>
           </div>
 
           {/* Navigation Section - Flexible */}
-          <nav className="flex-1 flex flex-col gap-2 overflow-y-auto min-h-0">
+          <nav className="flex-1 flex flex-col gap-2 overflow-y-auto min-h-0 mt-4">
             {links.map((link, idx) => (
               <SidebarLink key={idx} link={link} />
             ))}
@@ -53,6 +61,7 @@ export function AppSidebar() {
                 href: "#",
                 icon: <LogOut className="text-neutral-700 dark:text-neutral-200 h-5 w-5 shrink-0" />,
               }}
+              className="bg-secondary hover:bg-secondary/80 border-secondary"
             />
           </div>
         </div>

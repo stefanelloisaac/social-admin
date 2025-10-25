@@ -11,23 +11,23 @@ import { Loader } from "@/components/ui/loader";
 import { getPosts } from "@/lib/db";
 import type { Post } from "@/types/post";
 
-export default function FacebookPage() {
+export default function LinkedInPage() {
   usePageMetadata({
-    title: "Facebook",
-    description: "Gerencie e agende seus posts do Facebook",
+    title: "LinkedIn",
+    description: "Gerencie e agende seus posts do LinkedIn",
   });
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const postManager = usePostManager("facebook", setPosts);
-  const config = PLATFORMS_CONFIG.facebook;
+  const postManager = usePostManager("linkedin", setPosts);
+  const config = PLATFORMS_CONFIG.linkedin;
 
   useEffect(() => {
     const loadPosts = async () => {
       try {
-        const facebookPosts = await getPosts("facebook");
-        setPosts(facebookPosts);
+        const linkedinPosts = await getPosts("linkedin");
+        setPosts(linkedinPosts);
       } catch (error) {
         console.error("Erro ao carregar posts:", error);
       } finally {
@@ -50,7 +50,7 @@ export default function FacebookPage() {
     <div className="min-h-screen bg-background p-8">
       <main className="container mx-auto max-w-7xl">
         <PlatformPageTemplate
-          platform="facebook"
+          platform="linkedin"
           posts={posts}
           onNewPost={postManager.openCreateForm}
           onEdit={(post) => postManager.openEditForm(post)}

@@ -4,44 +4,37 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Heart, MessageCircle, Calendar, Edit, Trash2 } from "lucide-react";
 import Image from "next/image";
+import { formatNumber, formatScheduledDate } from "@/lib/formatters";
 
 interface SocialMediaCardProps {
+  id: string;
   imageUrl: string;
   caption: string;
   likes: number;
   comments: number;
   scheduledDate?: Date;
+  status: "published" | "scheduled" | "draft";
+  onEdit?: (id: string) => void;
+  onDelete?: (id: string) => void;
+  onClone?: (id: string) => void;
+  onSchedule?: (id: string) => void;
 }
 
 export function SocialMediaCard({
+  id,
   imageUrl,
   caption,
   likes,
   comments,
   scheduledDate,
+  status,
+  onEdit,
+  onDelete,
+  onClone,
+  onSchedule,
 }: SocialMediaCardProps) {
-  const formatScheduledDate = (date: Date) => {
-    return new Intl.DateTimeFormat("pt-BR", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    }).format(date);
-  };
-
-  const formatNumber = (num: number): string => {
-    if (num >= 1000000) {
-      return (num / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
-    }
-    if (num >= 1000) {
-      return (num / 1000).toFixed(1).replace(/\.0$/, "") + "K";
-    }
-    return num.toString();
-  };
-
   return (
-    <Card className="group flex h-full flex-col overflow-hidden p-0 transition-colors hover:border-primary gap-0">
+    <Card className="group flex h-full flex-col overflow-hidden p-0 transition-colors hover:border-primary">
       <div className="relative aspect-square overflow-hidden bg-muted">
         <Image
           src={imageUrl || "/placeholder.svg"}
@@ -50,65 +43,83 @@ export function SocialMediaCard({
           className="object-cover transition-transform duration-500 group-hover:scale-110"
         />
         {scheduledDate && (
-          <div className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-lg backdrop-blur-sm">
-            <Calendar className="h-3.5 w-3.5" />
-            Agendado
+          <div className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-primary px-2 py-1 text-xs font-semibold text-primary-foreground shadow-lg backdrop-blur-sm">
+            <Calendar className="h-3 w-3" />
+            <span className="hidden sm:inline">Agendado</span>
           </div>
         )}
-        <div className="absolute bottom-3 right-3 flex items-center gap-2 rounded-full bg-background/30 px-3 py-1.5 text-xs font-medium backdrop-blur-lg group-hover:bg-primary/30 group-hover:text-white transition-colors">
-          <div className="flex items-center gap-1.5">
-            <Heart className="h-3.5 w-3.5" />
-            <span>{formatNumber(likes)}</span>
+        <div className="absolute bottom-2 right-2 flex items-center gap-1.5 rounded-full bg-background/30 px-2 py-1 text-xs font-medium backdrop-blur-lg group-hover:bg-primary/30 group-hover:text-white transition-colors">
+          <div className="flex items-center gap-1">
+            <Heart className="h-3 w-3" />
+            <span className="text-xs">{formatNumber(likes)}</span>
           </div>
-          <div className="flex items-center gap-1.5 pl-2 border-l border-foreground/20">
-            <MessageCircle className="h-3.5 w-3.5" />
-            <span>{formatNumber(comments)}</span>
+          <div className="flex items-center gap-1 pl-1.5 border-l border-foreground/20">
+            <MessageCircle className="h-3 w-3" />
+            <span className="text-xs">{formatNumber(comments)}</span>
           </div>
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col py-4 px-6">
-        <div className="h-[60px] mb-3 overflow-hidden">
+      <div className="flex flex-1 flex-col py-3 px-4">
+        <div className="h-[45px] mb-2 overflow-hidden">
           <p
-            className="text-sm overflow-hidden text-ellipsis"
+            className="text-xs overflow-hidden text-ellipsis"
             style={{
               display: "-webkit-box",
-              WebkitLineClamp: 3,
+              WebkitLineClamp: 2,
               WebkitBoxOrient: "vertical",
-              lineHeight: "20px",
+              lineHeight: "16px",
             }}
           >
             {caption}
           </p>
         </div>
 
-        <div className="h-8 mb-3 flex items-center justify-end">
+        <div className="h-5 mb-2 flex items-center justify-end">
           {scheduledDate && (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <span className="font-semibold">Agendado:</span>
-              <span>{formatScheduledDate(scheduledDate)}</span>
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <span className="font-semibold">Ag:</span>
+              <span className="text-[10px]">{formatScheduledDate(scheduledDate)}</span>
             </div>
           )}
         </div>
 
-        <div className="mt-auto flex items-center justify-end gap-2 pt-3 border-t">
+        <div className="mt-auto flex items-center justify-end gap-1 pt-2 border-t">
           {!scheduledDate ? (
-            <Button className="w-36">
-              <Calendar className="h-4 w-4" />
-              Agendar
+            <Button
+              size="sm"
+              className="h-8 px-2 text-xs gap-1 flex-1"
+              onClick={() => onSchedule?.(id)}
+            >
+              <Calendar className="h-3 w-3" />
+              <span className="hidden sm:inline">Agendar</span>
             </Button>
           ) : (
-            <Button className="w-36">
-              <Calendar className="h-4 w-4" />
-              Reagendar
+            <Button
+              size="sm"
+              className="h-8 px-2 text-xs gap-1 flex-1"
+              onClick={() => onSchedule?.(id)}
+            >
+              <Calendar className="h-3 w-3" />
+              <span className="hidden sm:inline">Reagendar</span>
             </Button>
           )}
-          <Button className="w-36" variant='outline'>
-            <Edit className="h-4 w-4" />
-            Editar
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 px-2 text-xs gap-1"
+            onClick={() => onEdit?.(id)}
+          >
+            <Edit className="h-3 w-3" />
+            <span className="hidden sm:inline">Editar</span>
           </Button>
-          <Button variant="destructive" className="w-20">
-            <Trash2 className="h-4 w-4" />
+          <Button
+            size="sm"
+            variant="destructive"
+            className="h-8 w-8 p-0"
+            onClick={() => onDelete?.(id)}
+          >
+            <Trash2 className="h-3 w-3" />
           </Button>
         </div>
       </div>

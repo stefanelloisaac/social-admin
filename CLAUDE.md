@@ -31,7 +31,8 @@ npm run lint
 - **UI Components**: shadcn/ui (New York style) with Radix UI primitives
 - **Icons**: Lucide React
 - **Forms**: React Hook Form with Zod validation
-- **Fonts**: Geist Sans and Geist Mono (automatically optimized via next/font)
+- **Theme Management**: next-themes for light/dark/system mode
+- **Fonts**: Montserrat (configured in layout.tsx with weights 300-700)
 
 ## Architecture
 
@@ -40,15 +41,18 @@ npm run lint
 ```
 src/
 ├── app/              # Next.js App Router pages
-│   ├── layout.tsx   # Root layout with font configuration
-│   ├── page.tsx     # Home page
-│   └── globals.css  # Global styles and Tailwind directives
+│   ├── layout.tsx   # Root layout with Montserrat font and ThemeProvider
+│   ├── page.tsx     # Home page with post management
+│   └── globals.css  # Global styles, Tailwind directives, and CSS variables
 ├── components/
 │   ├── ui/          # shadcn/ui components (50+ reusable UI primitives)
+│   ├── layout/      # Layout components (e.g., AppSidebar)
+│   ├── theme/       # Theme components (e.g., ThemeToggle)
 │   └── main/        # Application-specific components (e.g., SocialMediaCard)
 ├── hooks/           # Custom React hooks
 │   ├── use-file-upload.ts  # File upload with drag-and-drop support
-│   └── use-mobile.ts       # Mobile breakpoint detection (768px)
+│   ├── use-mobile.ts       # Mobile breakpoint detection (768px)
+│   └── use-form.ts         # Form state management for add/edit/view/clone modes
 └── lib/
     └── utils.ts     # Utility functions (cn for className merging)
 ```
@@ -72,13 +76,27 @@ Add new shadcn components using the shadcn CLI (ensure you have it installed glo
 
 ### Key Components
 
-**SocialMediaCard** (`src/components/main/social-media-card.tsx`): Main component for displaying social media posts with:
-- Image display with hover effects
-- Caption with line clamping
-- Like/comment counts
-- Scheduling functionality
-- Edit/delete actions
-- Uses client-side rendering (`"use client"`)
+**SocialMediaCard** (`src/components/main/social-media-card.tsx`): Displays individual social media posts with:
+- Responsive image display with zoom on hover
+- 2-line caption clamping with fixed height
+- Like/comment counts badge with hover effects
+- Scheduling status and date display
+- Compact button layout (4+ cards per row on desktop)
+- Uses `"use client"` directive
+
+**AppSidebar** (`src/components/layout/app-sidebar.tsx`): Main navigation sidebar featuring:
+- Collapsible desktop sidebar (72px when open, 16px when collapsed)
+- Mobile hamburger menu with overlay drawer
+- Logo section with gradient background and fade animation
+- Navigation links for Instagram, Facebook, TikTok
+- Theme toggle and logout buttons in fixed footer
+- Smooth opacity transitions for text (uses CSS, not animations)
+
+**ThemeToggle** (`src/components/theme/theme-toggle.tsx`): Theme switcher that:
+- Cycles through Light → Dark → System on click
+- Integrates with next-themes for persistence
+- Fades in/out text label based on sidebar open state
+- Uses Sun/Moon icons from Lucide React
 
 ### Custom Hooks
 
@@ -92,13 +110,39 @@ Add new shadcn components using the shadcn CLI (ensure you have it installed glo
 
 **useIsMobile** (`src/hooks/use-mobile.ts`): Detects mobile devices using 768px breakpoint
 
+**useForm** (`src/hooks/use-form.ts`): Form state management for multiple modes:
+- Modes: "add", "edit", "view", "clone"
+- Manages formData, isLoading, error, and isReadOnly states
+- Supports field types: text, textarea, number, email, date, select, file
+- Auto-disables fields in "view" mode
+- Provides handleChange, handleFileChange, handleSubmit, reset functions
+- Async onSubmit callback support
+
 ### Styling Approach
 
 - Uses Tailwind CSS v4 with `@tailwindcss/postcss`
 - CSS variables for theming (defined in `globals.css`)
 - `cn()` utility function combines clsx and tailwind-merge for conditional classNames
-- Dark mode support via CSS variables
+- Dark mode support via CSS variables (next-themes integration)
 - Component styling follows shadcn/ui patterns with variants via class-variance-authority
+
+### Color Theming
+
+**Light Mode Theme Variables** (`:root`):
+- **Background**: `oklch(0.98 0.001 286)` - Soft gray background
+- **Card**: `oklch(1 0 0)` - Pure white for card surfaces
+- **Sidebar**: `oklch(0.96 0.002 286)` - Slightly darker gray than background
+- **Sidebar Accent**: `oklch(0.91 0.003 286.32)` - Darker for hover states
+- **Primary**: `oklch(0.541 0.281 293.009)` - Purple accent color
+- **Sidebar Border**: `oklch(0.88 0.004 286.32)` - Subtle borders
+
+**Dark Mode Theme Variables** (`.dark`):
+- **Background**: `oklch(0.141 0.005 285.823)` - Dark gray
+- **Card**: `oklch(0.21 0.006 285.885)` - Slightly lighter than background
+- **Sidebar**: `oklch(0.21 0.006 285.885)` - Same as card
+- **Primary**: `oklch(0.606 0.25 292.717)` - Lighter purple for contrast
+
+Note: CSS variables are used throughout the application, allowing for consistent theming and easy dark mode switching.
 
 ### Data Flow
 
@@ -112,5 +156,41 @@ This is currently a client-side focused application. Most components use `"use c
 - The project uses React 19 which includes automatic memo optimization
 - Next.js 16 requires explicit `"use client"` for client-side interactivity
 - Image components use Next.js Image with fill layout for responsive images
+- External images configured with wildcard remotePatterns in `next.config.ts`
 - All UI components are in `src/components/ui/` and should not be modified directly if from shadcn/ui (regenerate instead)
 - Custom application components go in `src/components/main/` or other feature-specific directories
+- Sidebar uses CSS transitions instead of animations to prevent layout shifts
+- Sidebar links have fixed height (`h-10`) to maintain consistent spacing
+- Theme toggle integrates with next-themes for persistence across page reloads
+- Portuguese language used throughout the UI for form labels, buttons, and messages
+
+## Key Implementation Patterns
+
+### Sidebar State Management
+The sidebar uses React Context (`SidebarContext`) for state management. To access sidebar state in components:
+```typescript
+import { useSidebar } from "@/components/ui/sidebar";
+const { open, setOpen } = useSidebar();
+```
+
+### Form Component Integration
+Forms should use the `FormModal` component with the `useForm` hook. The hook handles different modes automatically:
+```typescript
+const form = useForm({
+  mode: "edit", // "add" | "edit" | "view" | "clone"
+  initialData: post,
+  onSubmit: async (data) => {
+    // Handle form submission
+  }
+});
+```
+
+### CSS Variables in Components
+Always use CSS variable classes (e.g., `bg-sidebar`, `border-sidebar-border`) instead of hardcoding colors to maintain theme consistency:
+```typescript
+// Good
+className="bg-sidebar border-sidebar-border"
+
+// Avoid
+className="bg-gray-100 border-gray-300"
+```
