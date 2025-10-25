@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "./providers/theme.provider";
+import { ThemeProvider } from "../providers/theme.provider";
+import { AppSidebar } from "@/components/layout/app-sidebar";
 
 const montserrat = Montserrat({
   variable: "--font-sans",
@@ -28,7 +29,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <div className="flex h-screen overflow-hidden">
+            <AppSidebar />
+            <main className="flex-1 overflow-y-auto">
+              {children}
+            </main>
+          </div>
         </ThemeProvider>
       </body>
     </html>
