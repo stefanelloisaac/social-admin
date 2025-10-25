@@ -19,12 +19,12 @@ export function PageHeader({
   children,
 }: PageHeaderProps) {
   return (
-    <div className="space-y-4 pb-4 border-b">
+    <div className="space-y-2 pb-4 border-b">
       <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
+        <div className="space-y-0.5">
+          <h1 className="text-xl font-bold">{title}</h1>
           {description && (
-            <p className="text-sm text-muted-foreground">{description}</p>
+            <p className="text-xs text-muted-foreground">{description}</p>
           )}
         </div>
         {onNewClick && (

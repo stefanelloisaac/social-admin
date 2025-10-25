@@ -1,4 +1,5 @@
 export type PostStatus = "published" | "scheduled" | "draft";
+export type Platform = "instagram" | "facebook" | "tiktok" | "linkedin";
 
 export interface Post {
   id: string;
