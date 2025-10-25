@@ -9,7 +9,7 @@ db.exec(`
     id TEXT PRIMARY KEY,
     platform TEXT NOT NULL,
     title TEXT NOT NULL,
-    imageUrl TEXT NOT NULL,
+    imageUrls TEXT NOT NULL,
     caption TEXT NOT NULL,
     likes INTEGER NOT NULL DEFAULT 0,
     comments INTEGER NOT NULL DEFAULT 0,

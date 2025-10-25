@@ -66,6 +66,7 @@ export default function InstagramPage() {
           onClose={postManager.closeForm}
           onSubmit={postManager.handleFormSubmit}
           platformLabel={config.label}
+          platform="instagram"
         />
 
         <DeleteConfirmDialog

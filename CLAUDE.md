@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Next.js 16 (App Router) project called "social-admin" - a social media administration dashboard built with React 19, TypeScript, and Tailwind CSS. The project uses shadcn/ui components for the UI layer.
+This is a Next.js 16 (App Router) project called "social-admin" - a social media administration dashboard for managing posts across Instagram, Facebook, TikTok, and LinkedIn. Built with React 19, TypeScript, Tailwind CSS, and shadcn/ui components. Features authentication via better-auth with SQLite local database and comprehensive analytics dashboards.
 
 ## Development Commands
 
@@ -20,6 +20,9 @@ npm start
 
 # Run linter
 npm run lint
+
+# Create admin user for authentication (after initial setup)
+node scripts/create-admin.mjs
 ```
 
 ## Tech Stack
@@ -32,6 +35,9 @@ npm run lint
 - **Icons**: Lucide React
 - **Forms**: React Hook Form with Zod validation
 - **Theme Management**: next-themes for light/dark/system mode
+- **Authentication**: better-auth v1.3.31 with email/password strategy and better-sqlite3 database
+- **Database**: better-sqlite3 with WAL mode for local SQLite authentication
+- **Charts**: Recharts for analytics visualizations
 - **Fonts**: Montserrat (configured in layout.tsx with weights 300-700)
 
 ## Architecture
@@ -40,21 +46,39 @@ npm run lint
 
 ```
 src/
-├── app/              # Next.js App Router pages
-│   ├── layout.tsx   # Root layout with Montserrat font and ThemeProvider
-│   ├── page.tsx     # Home page with post management
-│   └── globals.css  # Global styles, Tailwind directives, and CSS variables
+├── app/              # Next.js App Router pages and API routes
+│   ├── (main)/       # Protected routes group - require authentication
+│   │   ├── dashboard/     # Main analytics dashboard
+│   │   ├── instagram/      # Instagram feed management
+│   │   ├── facebook/       # Facebook feed management
+│   │   ├── tiktok/         # TikTok feed management
+│   │   ├── linkedin/       # LinkedIn feed management
+│   │   └── page.tsx        # Root redirect to /dashboard
+│   ├── auth/         # Public authentication routes
+│   │   ├── sign-in/        # Login page
+│   │   └── sign-up/        # Registration page
+│   ├── api/
+│   │   ├── auth/[...path]/route.ts   # better-auth API handler
+│   │   └── posts/route.ts            # Posts data API
+│   ├── layout.tsx            # Root layout with Montserrat font and ThemeProvider
+│   └── globals.css           # Global styles, Tailwind directives, CSS variables
 ├── components/
 │   ├── ui/          # shadcn/ui components (50+ reusable UI primitives)
-│   ├── layout/      # Layout components (e.g., AppSidebar)
-│   ├── theme/       # Theme components (e.g., ThemeToggle)
-│   └── main/        # Application-specific components (e.g., SocialMediaCard)
+│   ├── layout/      # Layout components (AppSidebar, PageHeader)
+│   ├── theme/       # Theme components (ThemeToggle, LogoutButton)
+│   └── main/        # Application-specific components (SocialMediaCard, AnalyticsDashboard)
 ├── hooks/           # Custom React hooks
+│   ├── use-auth.ts         # Authentication hook (sign in/up/out, session management)
 │   ├── use-file-upload.ts  # File upload with drag-and-drop support
 │   ├── use-mobile.ts       # Mobile breakpoint detection (768px)
 │   └── use-form.ts         # Form state management for add/edit/view/clone modes
-└── lib/
-    └── utils.ts     # Utility functions (cn for className merging)
+├── lib/
+│   ├── auth.ts      # better-auth configuration with SQLite database
+│   ├── analytics.ts # Analytics calculations and chart data generation
+│   └── utils.ts     # Utility functions (cn for className merging)
+├── proxy.ts         # Next.js middleware for authentication redirects
+└── scripts/
+    └── create-admin.mjs  # Script to seed initial admin user into database
 ```
 
 ### Path Aliases
@@ -171,6 +195,46 @@ The home page (`src/app/page.tsx`) displays a comprehensive analytics dashboard 
     - `likesByPlatformTrend`: Monthly likes per platform (for line chart)
   - All calculations are deterministic and use proper null checks
 
+### Authentication System
+
+The application uses **better-auth v1.3.31** with email/password strategy for authentication:
+
+**Core Files:**
+- **`src/lib/auth.ts`**: Configures better-auth with `better-sqlite3` database (`./auth.db`)
+  - Enables `emailAndPassword` strategy for email/password authentication
+  - Database uses WAL (Write-Ahead Logging) mode for better concurrency
+  - Auto-generates schema: `user`, `account`, `session`, `verification` tables
+
+- **`src/hooks/use-auth.ts`**: Client-side hook wrapping better-auth client
+  - Provides: `user`, `isLoading`, `isAuthenticated`, `error`
+  - Methods: `signIn(email, password)`, `signUp(email, password, name)`, `signOut()`
+  - Auto-fetches session on component mount
+
+- **`src/app/api/auth/[...path]/route.ts`**: API handler for all auth endpoints
+  - Minimal setup using `toNextJsHandler(auth)` from better-auth
+  - Handles sign-in, sign-up, sign-out, session validation automatically
+
+- **`src/proxy.ts`**: Next.js middleware for route protection
+  - Fetches session from `/api/auth/get-session` on every request
+  - Redirects authenticated users away from `/auth/*` pages to `/dashboard`
+  - Redirects unauthenticated users from protected routes (`/dashboard`, `/`) to `/auth/sign-in`
+
+**Database Schema:**
+- `user`: id, name, email, emailVerified, image, createdAt, updatedAt
+- `account`: id, accountId, providerId (always "credential" for email/password), userId, password (hashed), createdAt, updatedAt
+- `session`: Session management handled automatically
+- `verification`: Email verification tokens (if enabled)
+
+**Initial Setup:**
+1. better-auth schema is generated automatically on first run
+2. Admin user must be created via `scripts/create-admin.mjs` script
+3. Default credentials: `admin@admin.com` / `admin123`
+
+**LogoutButton** (`src/components/theme/logout-button.tsx`):
+- Uses `useAuth().signOut()` to clear session
+- Redirects to `/auth/sign-in` after logout
+- Respects sidebar open/closed state with text fade animation
+
 ### Data Flow
 
 This is currently a client-side focused application. Most components use `"use client"` directive. Server components are available but not heavily utilized yet. When adding data fetching:
@@ -178,7 +242,16 @@ This is currently a client-side focused application. Most components use `"use c
 - Use client components for interactivity (forms, animations, state)
 - Follow Next.js 16 App Router conventions for data fetching and caching
 
-**Dashboard Data Flow**: Home page fetches posts from all platforms (Instagram, Facebook, TikTok, LinkedIn), adds platform field during aggregation, and passes unified array to AnalyticsDashboard for rendering.
+**Dashboard Data Flow**: Dashboard page fetches posts from all platforms (Instagram, Facebook, TikTok, LinkedIn), aggregates them with platform field, and passes unified array to AnalyticsDashboard for rendering.
+
+**Authentication Flow**:
+1. Unauthenticated user visits `/` → middleware redirects to `/auth/sign-in`
+2. User enters credentials and clicks sign in
+3. Request goes to `/api/auth/sign-in/email`
+4. better-auth validates password against `account` table
+5. Session cookie is set
+6. User is redirected to `/dashboard` by sign-in page
+7. Middleware validates session on all subsequent requests
 
 ## Important Notes
 
@@ -193,7 +266,51 @@ This is currently a client-side focused application. Most components use `"use c
 - Theme toggle integrates with next-themes for persistence across page reloads
 - Portuguese language used throughout the UI for form labels, buttons, and messages
 
+## Authentication Implementation Notes
+
+**Key Points:**
+- Single SQLite database (`auth.db`) for all authentication data - no separate databases for auth and application data
+- Route group `(main)` enforces authentication via middleware - all routes inside are protected
+- Public routes: `/auth/sign-in`, `/auth/sign-up`
+- Protected routes: everything under `/(main)/` including dashboard and platform feeds
+- Middleware (`proxy.ts`) is the primary gatekeeper - it runs on every request before components load
+- Session is fetched server-side in middleware via `/api/auth/get-session` endpoint
+- Client-side auth state via `useAuth()` hook for UI updates (loading states, showing user info)
+
+**When Making Changes:**
+- If adding new protected pages, put them in `/(main)/` directory - middleware will auto-protect them
+- If adding new public pages, ensure they're outside `/(main)/` and not caught by middleware redirects
+- Always use `useAuth()` hook for user context on client components
+- Don't bypass middleware redirects - they're essential for security
+
+**Seeding Data:**
+- After fresh setup, always run `node scripts/create-admin.mjs` to create the initial admin user
+- This script inserts into BOTH `user` and `account` tables with correct structure
+
 ## Key Implementation Patterns
+
+### Authentication in Protected Pages
+Use the `useAuth()` hook to access current user and authentication state in protected pages:
+```typescript
+"use client";
+import { useAuth } from "@/hooks/use-auth";
+
+export default function ProtectedPage() {
+  const { user, isLoading, isAuthenticated, signOut } = useAuth();
+
+  if (isLoading) return <Loader text="Carregando..." />;
+
+  return (
+    <div>
+      <p>Bem-vindo, {user?.name}!</p>
+      <button onClick={signOut}>Sair</button>
+    </div>
+  );
+}
+```
+- Middleware ensures unauthenticated users never reach this component
+- `useAuth()` provides loading state during session verification
+- Session is auto-fetched on component mount
 
 ### Page Headers
 Use the `PageHeader` component from `@/components/layout/page-header` for all page titles:

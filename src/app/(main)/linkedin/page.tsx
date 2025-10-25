@@ -66,6 +66,7 @@ export default function LinkedInPage() {
           onClose={postManager.closeForm}
           onSubmit={postManager.handleFormSubmit}
           platformLabel={config.label}
+          platform="linkedin"
         />
 
         <DeleteConfirmDialog

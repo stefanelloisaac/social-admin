@@ -123,7 +123,7 @@ export async function clonePost(
 
     const cloned: CreatePostInput = {
       title: `${original.title} (Cópia)`,
-      imageUrl: original.imageUrl,
+      imageUrls: original.imageUrls,
       caption: original.caption,
       status: "draft",
     };

@@ -5,7 +5,7 @@ export interface Post {
   id: string;
   platform?: string;
   title: string;
-  imageUrl: string;
+  imageUrls: string[];
   caption: string;
   likes: number;
   comments: number;
@@ -17,7 +17,7 @@ export interface Post {
 
 export interface CreatePostInput {
   title: string;
-  imageUrl: string;
+  imageUrls: string[];
   caption: string;
   status: PostStatus;
   scheduledDate?: string;
@@ -25,7 +25,7 @@ export interface CreatePostInput {
 
 export interface UpdatePostInput {
   title?: string;
-  imageUrl?: string;
+  imageUrls?: string[];
   caption?: string;
   status?: PostStatus;
   scheduledDate?: string;

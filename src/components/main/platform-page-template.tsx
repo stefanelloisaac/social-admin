@@ -86,7 +86,8 @@ export function PlatformPageTemplate({
             <SocialMediaCard
               key={post.id}
               id={post.id}
-              imageUrl={post.imageUrl}
+              imageUrl={post.imageUrls[0]}
+              imageUrls={post.imageUrls}
               caption={post.caption}
               likes={post.likes}
               comments={post.comments}

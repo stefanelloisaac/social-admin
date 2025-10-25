@@ -31,6 +31,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ImageUploadWithCropper } from "@/components/main/image-upload-with-cropper";
+import { ImageCollagePreview } from "@/components/main/image-collage-preview";
 import type { Post, PostStatus, CreatePostInput, UpdatePostInput } from "@/types/post";
 
 interface FormModalProps {
@@ -40,6 +42,7 @@ interface FormModalProps {
   onClose: () => void;
   onSubmit: (data: CreatePostInput | UpdatePostInput) => Promise<void>;
   platformLabel: string;
+  platform?: "instagram" | "facebook" | "tiktok" | "linkedin";
 }
 
 export function FormModal({
@@ -49,13 +52,14 @@ export function FormModal({
   onClose,
   onSubmit,
   platformLabel,
+  platform,
 }: FormModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [formData, setFormData] = useState<CreatePostInput>({
     title: post?.title || "",
-    imageUrl: post?.imageUrl || "",
+    imageUrls: post?.imageUrls || [],
     caption: post?.caption || "",
     status: (post?.status || "draft") as PostStatus,
     scheduledDate: post?.scheduledDate || "",
@@ -74,7 +78,7 @@ export function FormModal({
       await onSubmit(formData);
       setFormData({
         title: "",
-        imageUrl: "",
+        imageUrls: [],
         caption: "",
         status: "draft",
       });
@@ -92,7 +96,7 @@ export function FormModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-screen overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {mode === "create" && `Novo Post - ${platformLabel}`}
@@ -106,7 +110,7 @@ export function FormModal({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="title">Título</Label>
             <Input
@@ -121,30 +125,55 @@ export function FormModal({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="imageUrl">URL da Imagem</Label>
-            <Input
-              id="imageUrl"
-              placeholder="https://exemplo.com/imagem.jpg"
-              value={formData.imageUrl}
-              onChange={(e) =>
-                setFormData({ ...formData, imageUrl: e.target.value })
+          {platform === "instagram" || platform === "linkedin" ? (
+            <ImageUploadWithCropper
+              value={formData.imageUrls}
+              onChange={(imageUrls) =>
+                setFormData({ ...formData, imageUrls })
               }
               disabled={isReadOnly || isLoading}
-              type="text"
+              aspectRatio={platform === "instagram" ? 1 : 1.91}
+              maxImages={platform === "instagram" ? 10 : 5}
+              platformLabel={platformLabel}
             />
-            {formData.imageUrl && (
-              <div className="relative aspect-video overflow-hidden rounded-lg border bg-muted">
-                <Image
-                  src={formData.imageUrl || "/placeholder.svg"}
-                  alt="Preview"
-                  fill
-                  className="object-cover"
-                  unoptimized
+          ) : (
+            <div className="space-y-2">
+              <Label htmlFor="imageUrl">URL da Imagem</Label>
+              <Input
+                id="imageUrl"
+                placeholder="https://exemplo.com/imagem.jpg"
+                value={formData.imageUrls[0] || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, imageUrls: e.target.value ? [e.target.value] : [] })
+                }
+                disabled={isReadOnly || isLoading}
+                type="text"
+              />
+              {formData.imageUrls[0] && (
+                <div className="relative aspect-video overflow-hidden rounded-lg border bg-muted">
+                  <Image
+                    src={formData.imageUrls[0] || "/placeholder.svg"}
+                    alt="Preview"
+                    fill
+                    className="object-cover"
+                    unoptimized
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {formData.imageUrls.length > 0 && (
+            <div className="space-y-2">
+              <Label>Prévia da Postagem</Label>
+              <div className="h-64 w-full">
+                <ImageCollagePreview
+                  imageUrls={formData.imageUrls}
+                  platformLabel={platformLabel}
                 />
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="caption">Legenda</Label>
@@ -156,7 +185,7 @@ export function FormModal({
                 setFormData({ ...formData, caption: e.target.value })
               }
               disabled={isReadOnly || isLoading}
-              rows={4}
+              rows={6}
               required
             />
           </div>
@@ -171,7 +200,7 @@ export function FormModal({
                 }
                 disabled={isReadOnly || isLoading}
               >
-                <SelectTrigger id="status">
+                <SelectTrigger id="status" className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -208,16 +237,17 @@ export function FormModal({
           </div>
 
           {!isReadOnly && (
-            <DialogFooter className="pt-4">
+            <DialogFooter className="mt-8 gap-4">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
                 disabled={isLoading}
+                className="flex-1"
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isLoading} className="relative">
+              <Button type="submit" disabled={isLoading} className="relative flex-1">
                 {isLoading ? (
                   <>
                     <Loader size="sm" className="absolute left-2" />
@@ -232,7 +262,7 @@ export function FormModal({
             </DialogFooter>
           )}
           {isReadOnly && (
-            <DialogFooter className="pt-4">
+            <DialogFooter className="mt-8">
               <Button type="button" onClick={onClose}>
                 Fechar
               </Button>

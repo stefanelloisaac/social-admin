@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDatabase } from "@/lib/db-init";
 import type { Platform } from "@/config/platforms";
-import type { CreatePostInput, UpdatePostInput } from "@/types/post";
+import type { CreatePostInput, UpdatePostInput, Post } from "@/types/post";
+
+// Helper function to parse imageUrls from JSON string
+function parsePost(row: any): Post {
+  return {
+    ...row,
+    imageUrls: typeof row.imageUrls === "string" ? JSON.parse(row.imageUrls) : row.imageUrls,
+  };
+}
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -14,14 +22,14 @@ export async function GET(request: NextRequest) {
     if (id) {
       const stmt = db.prepare("SELECT * FROM posts WHERE platform = ? AND id = ?");
       const post = stmt.get(platform, id);
-      return NextResponse.json(post || null);
+      return NextResponse.json(post ? parsePost(post) : null);
     }
 
     const stmt = db.prepare(
       "SELECT * FROM posts WHERE platform = ? ORDER BY createdAt DESC"
     );
     const posts = stmt.all(platform);
-    return NextResponse.json(posts);
+    return NextResponse.json(posts.map(parsePost));
   } catch (error) {
     console.error("Error fetching posts:", error);
     return NextResponse.json(
@@ -34,7 +42,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { platform, title, imageUrl, caption, status, scheduledDate } = body;
+    const { platform, title, imageUrls, caption, status, scheduledDate } = body;
 
     const db = getDatabase();
     const id = Date.now().toString();
@@ -42,7 +50,7 @@ export async function POST(request: NextRequest) {
 
     const stmt = db.prepare(`
       INSERT INTO posts (
-        id, platform, title, imageUrl, caption, status,
+        id, platform, title, imageUrls, caption, status,
         scheduledDate, likes, comments, createdAt, updatedAt
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
@@ -51,7 +59,7 @@ export async function POST(request: NextRequest) {
       id,
       platform,
       title,
-      imageUrl,
+      JSON.stringify(imageUrls || []),
       caption,
       status,
       scheduledDate || null,
@@ -65,7 +73,7 @@ export async function POST(request: NextRequest) {
       id,
       platform,
       title,
-      imageUrl,
+      imageUrls: imageUrls || [],
       caption,
       status,
       scheduledDate,
@@ -86,7 +94,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { platform, id, title, imageUrl, caption, status, scheduledDate } = body;
+    const { platform, id, title, imageUrls, caption, status, scheduledDate } = body;
 
     const db = getDatabase();
     const now = new Date().toISOString();
@@ -94,7 +102,7 @@ export async function PUT(request: NextRequest) {
     const stmt = db.prepare(`
       UPDATE posts SET
         title = ?,
-        imageUrl = ?,
+        imageUrls = ?,
         caption = ?,
         status = ?,
         scheduledDate = ?,
@@ -104,7 +112,7 @@ export async function PUT(request: NextRequest) {
 
     stmt.run(
       title,
-      imageUrl,
+      JSON.stringify(imageUrls || []),
       caption,
       status,
       scheduledDate || null,
@@ -116,7 +124,7 @@ export async function PUT(request: NextRequest) {
     const getStmt = db.prepare("SELECT * FROM posts WHERE platform = ? AND id = ?");
     const updated = getStmt.get(platform, id);
 
-    return NextResponse.json(updated);
+    return NextResponse.json(updated ? parsePost(updated) : null);
   } catch (error) {
     console.error("Error updating post:", error);
     return NextResponse.json(

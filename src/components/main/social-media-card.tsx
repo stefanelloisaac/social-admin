@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Heart, MessageCircle, Calendar, Edit, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { formatNumber, formatScheduledDate } from "@/lib/formatters";
+import { ImageCollagePreview } from "@/components/main/image-collage-preview";
 
 interface SocialMediaCardProps {
   id: string;
   imageUrl: string;
+  imageUrls?: string[];
   caption: string;
   likes: number;
   comments: number;
@@ -23,6 +25,7 @@ interface SocialMediaCardProps {
 export function SocialMediaCard({
   id,
   imageUrl,
+  imageUrls,
   caption,
   likes,
   comments,
@@ -35,13 +38,19 @@ export function SocialMediaCard({
 }: SocialMediaCardProps) {
   return (
     <Card className="group flex h-full flex-col overflow-hidden p-0 transition-colors hover:border-primary">
-      <div className="relative aspect-square overflow-hidden bg-muted">
-        <Image
-          src={imageUrl || "/placeholder.svg"}
-          alt="Prévia da postagem"
-          fill
-          className="object-cover transition-transform duration-500 group-hover:scale-110"
-        />
+      <div className="relative aspect-square overflow-hidden bg-muted group">
+        {imageUrls && imageUrls.length > 0 ? (
+          <div className="w-full h-full">
+            <ImageCollagePreview imageUrls={imageUrls} />
+          </div>
+        ) : (
+          <Image
+            src={imageUrl || "/placeholder.svg"}
+            alt="Prévia da postagem"
+            fill
+            className="object-cover transition-transform duration-500 group-hover:scale-110"
+          />
+        )}
         {scheduledDate && (
           <div className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-primary px-2 py-1 text-xs font-semibold text-primary-foreground shadow-lg backdrop-blur-sm">
             <Calendar className="h-3 w-3" />
