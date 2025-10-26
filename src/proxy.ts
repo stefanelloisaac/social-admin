@@ -6,7 +6,6 @@ export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const isPublicRoute = publicRoutes.includes(pathname);
 
-  // Get session from better-auth
   const sessionResponse = await fetch(
     new URL("/api/auth/get-session", request.url),
     {
@@ -19,12 +18,10 @@ export async function proxy(request: NextRequest) {
   const sessionData = await sessionResponse.json();
   const isAuthenticated = !!sessionData?.user;
 
-  // If authenticated and trying to access auth pages, redirect to dashboard
   if (isAuthenticated && isPublicRoute) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  // If not authenticated and trying to access protected routes, redirect to login
   if (!isAuthenticated && (pathname.startsWith("/dashboard") || pathname === "/")) {
     return NextResponse.redirect(new URL("/auth/sign-in", request.url));
   }

@@ -3,7 +3,6 @@ import Database from "better-sqlite3";
 const db = new Database("./auth.db");
 db.pragma("journal_mode = WAL");
 
-// Initialize posts table if it doesn't exist
 db.exec(`
   CREATE TABLE IF NOT EXISTS posts (
     id TEXT PRIMARY KEY,

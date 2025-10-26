@@ -13,6 +13,13 @@ import { Label } from "@/components/ui/label";
 import { X, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+interface CropArea {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 interface ImageUploadWithCropperProps {
   value: string[];
   onChange: (imageUrls: string[]) => void;
@@ -31,13 +38,14 @@ export function ImageUploadWithCropper({
   platformLabel = "Post",
 }: ImageUploadWithCropperProps) {
   const [uploadedImages, setUploadedImages] = useState<string[]>(value || []);
-  const [currentEditingIndex, setCurrentEditingIndex] = useState<number | null>(null);
+  const [currentEditingIndex, setCurrentEditingIndex] = useState<number | null>(
+    null
+  );
   const [tempImage, setTempImage] = useState<string | null>(null);
   const [isCropping, setIsCropping] = useState(false);
-  const [cropArea, setCropArea] = useState<any>(null);
+  const [cropArea, setCropArea] = useState<CropArea | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Sync internal state with prop value
   useEffect(() => {
     setUploadedImages(value || []);
   }, [value]);
@@ -53,7 +61,7 @@ export function ImageUploadWithCropper({
     fileArray.forEach((file, idx) => {
       if (newImages.length + idx >= maxImages) {
         if (idx === 0) {
-          alert(`Máximo de ${maxImages} imagens atingido`);
+          alert(`Limite máximo de ${maxImages} imagens alcançado`);
         }
         return;
       }
@@ -64,7 +72,6 @@ export function ImageUploadWithCropper({
         newImages[uploadedImages.length + idx] = result;
         filesProcessed++;
 
-        // After all files are read, update state
         if (filesProcessed === fileArray.length) {
           setUploadedImages(newImages);
           onChange(newImages);
@@ -73,7 +80,6 @@ export function ImageUploadWithCropper({
       reader.readAsDataURL(file);
     });
 
-    // Reset input
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -84,11 +90,11 @@ export function ImageUploadWithCropper({
       try {
         const img = new window.Image();
         img.onload = () => {
-          const canvas = document.createElement('canvas');
+          const canvas = document.createElement("canvas");
           canvas.width = cropArea.width;
           canvas.height = cropArea.height;
 
-          const ctx = canvas.getContext('2d');
+          const ctx = canvas.getContext("2d");
           if (ctx) {
             ctx.drawImage(
               img,
@@ -102,7 +108,7 @@ export function ImageUploadWithCropper({
               cropArea.height
             );
 
-            const croppedImageUrl = canvas.toDataURL('image/png');
+            const croppedImageUrl = canvas.toDataURL("image/png");
 
             const newImages = [...uploadedImages];
             if (currentEditingIndex !== null) {
@@ -119,7 +125,7 @@ export function ImageUploadWithCropper({
         img.src = tempImage;
       } catch (error) {
         console.error("Error cropping image:", error);
-        alert("Erro ao cortar imagem. Tente novamente.");
+        alert("Erro ao cortar a imagem. Tente novamente.");
       }
     }
   };
@@ -130,8 +136,10 @@ export function ImageUploadWithCropper({
     setCropArea(null);
   }, []);
 
-  const handleCropAreaChange = useCallback((area: any) => {
-    setCropArea(area);
+  const handleCropAreaChange = useCallback((area: CropArea | null) => {
+    if (area) {
+      setCropArea(area);
+    }
   }, []);
 
   const removeImage = (index: number) => {
@@ -151,12 +159,12 @@ export function ImageUploadWithCropper({
       <div className="space-y-2">
         <Label>Imagens do {platformLabel}</Label>
 
-        {/* Upload Area */}
-        <div className={cn(
-          "border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:bg-accent/50 transition-colors",
-          disabled && "opacity-50 cursor-not-allowed"
-        )}
-        onClick={() => !disabled && fileInputRef.current?.click()}
+        <div
+          className={cn(
+            "border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:bg-accent/50 transition-colors",
+            disabled && "opacity-50 cursor-not-allowed"
+          )}
+          onClick={() => !disabled && fileInputRef.current?.click()}
         >
           <input
             ref={fileInputRef}
@@ -175,7 +183,6 @@ export function ImageUploadWithCropper({
           </p>
         </div>
 
-        {/* Image Grid */}
         {uploadedImages.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {uploadedImages.map((image, index) => (
@@ -190,7 +197,6 @@ export function ImageUploadWithCropper({
                   />
                 </div>
 
-                {/* Overlay Actions */}
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
                   <Button
                     size="sm"
@@ -210,7 +216,6 @@ export function ImageUploadWithCropper({
                   </Button>
                 </div>
 
-                {/* Primary Badge */}
                 {index === 0 && (
                   <div className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded">
                     Principal
@@ -222,7 +227,6 @@ export function ImageUploadWithCropper({
         )}
       </div>
 
-      {/* Image Cropper Modal */}
       {isCropping && tempImage && (
         <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
           <div className="bg-background rounded-lg max-w-2xl w-full max-h-[80vh] overflow-auto p-6">
@@ -235,24 +239,19 @@ export function ImageUploadWithCropper({
                 aspectRatio={aspectRatio}
                 onCropChange={handleCropAreaChange}
               >
-                <CropperDescription>Ajuste a imagem conforme desejado</CropperDescription>
+                <CropperDescription>
+                  Ajuste a imagem conforme desejado
+                </CropperDescription>
                 <CropperImage />
                 <CropperCropArea />
               </Cropper>
             </div>
 
             <div className="flex justify-end gap-3">
-              <Button
-                variant="outline"
-                onClick={closeCropper}
-              >
+              <Button variant="outline" onClick={closeCropper}>
                 Cancelar
               </Button>
-              <Button
-                onClick={handleCrop}
-              >
-                Aplicar Corte
-              </Button>
+              <Button onClick={handleCrop}>Aplicar Corte</Button>
             </div>
           </div>
         </div>

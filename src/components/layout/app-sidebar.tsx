@@ -46,14 +46,12 @@ export function AppSidebar() {
             </Link>
           </div>
 
-          {/* Navigation Section - Flexible */}
           <nav className="flex-1 flex flex-col gap-2 overflow-y-auto min-h-0 mt-4">
             {links.map((link, idx) => (
               <SidebarLink key={idx} link={link} />
             ))}
           </nav>
 
-          {/* Bottom Section - Fixed Height */}
           <div className="flex flex-col gap-3 shrink-0 border-t border-border pt-4">
             <ThemeToggle />
             <LogoutButton />

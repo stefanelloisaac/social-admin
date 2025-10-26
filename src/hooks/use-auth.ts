@@ -7,8 +7,18 @@ const authClient = createAuthClient({
   baseURL: typeof window !== "undefined" ? window.location.origin : "",
 });
 
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  image?: string | null;
+  emailVerified: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export function useAuth() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,6 +38,17 @@ export function useAuth() {
     getSession();
   }, []);
 
+  const translateError = (message: string): string => {
+    const errorMap: Record<string, string> = {
+      "Invalid email or password": "Email ou senha inválidos",
+      "User not found": "Usuário não encontrado",
+      "Email already exists": "Este email já está registrado",
+      "Password is too short": "A senha é muito curta",
+      "Invalid email": "Email inválido",
+    };
+    return errorMap[message] || message;
+  };
+
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
@@ -37,15 +58,16 @@ export function useAuth() {
       });
 
       if (response.error) {
-        throw new Error("Sign in failed");
+        const errorMsg = response.error.message || "Falha ao fazer login";
+        throw new Error(translateError(errorMsg));
       }
 
       setUser(response.data?.user ?? null);
       return response.data;
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Sign in failed";
+      const message = err instanceof Error ? err.message : "Falha ao fazer login";
       setError(message);
-      throw err;
+      throw new Error(message);
     } finally {
       setIsLoading(false);
     }
@@ -61,15 +83,16 @@ export function useAuth() {
       });
 
       if (response.error) {
-        throw new Error("Sign up failed");
+        const errorMsg = response.error.message || "Falha ao criar conta";
+        throw new Error(translateError(errorMsg));
       }
 
       setUser(response.data?.user ?? null);
       return response.data;
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Sign up failed";
+      const message = err instanceof Error ? err.message : "Falha ao criar conta";
       setError(message);
-      throw err;
+      throw new Error(message);
     } finally {
       setIsLoading(false);
     }
@@ -81,7 +104,7 @@ export function useAuth() {
       await authClient.signOut();
       setUser(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Sign out failed");
+      setError(err instanceof Error ? err.message : "Falha ao fazer logout");
     } finally {
       setIsLoading(false);
     }

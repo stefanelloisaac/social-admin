@@ -172,7 +172,7 @@ export default function DashboardPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-8">
-        <Loader fullscreen text="Carregando dashboard..." />
+        <Loader text="Carregando dashboard..." />
       </div>
     );
   }

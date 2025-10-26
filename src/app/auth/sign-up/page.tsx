@@ -56,7 +56,6 @@ export default function SignUpPage() {
     try {
       await signUp(formData.email, formData.password, formData.name);
       toast.success("Conta criada com sucesso!");
-      // Small delay to ensure session is set before redirect
       setTimeout(() => {
         router.push("/");
       }, 500);
@@ -68,8 +67,7 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md">
         <div className="p-6 space-y-6">
           <div className="space-y-2 text-center">
             <h1 className="text-2xl font-bold text-foreground">Criar Conta</h1>
@@ -80,7 +78,10 @@ export default function SignUpPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="name" className="text-sm font-medium text-foreground">
+              <label
+                htmlFor="name"
+                className="text-sm font-medium text-foreground"
+              >
                 Nome
               </label>
               <Input
@@ -97,7 +98,10 @@ export default function SignUpPage() {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-foreground">
+              <label
+                htmlFor="email"
+                className="text-sm font-medium text-foreground"
+              >
                 Email
               </label>
               <Input
@@ -115,7 +119,10 @@ export default function SignUpPage() {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium text-foreground">
+              <label
+                htmlFor="password"
+                className="text-sm font-medium text-foreground"
+              >
                 Senha
               </label>
               <Input
@@ -133,7 +140,10 @@ export default function SignUpPage() {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">
+              <label
+                htmlFor="confirmPassword"
+                className="text-sm font-medium text-foreground"
+              >
                 Confirmar Senha
               </label>
               <Input
@@ -158,13 +168,15 @@ export default function SignUpPage() {
           <div className="text-center">
             <p className="text-sm text-muted-foreground">
               Já tem uma conta?{" "}
-              <Link href="/auth/sign-in" className="text-primary hover:underline">
+              <Link
+                href="/auth/sign-in"
+                className="text-primary hover:underline"
+              >
                 Entrar
               </Link>
             </p>
           </div>
         </div>
       </Card>
-    </div>
   );
 }

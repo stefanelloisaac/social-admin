@@ -45,7 +45,6 @@ export default function SignInPage() {
     try {
       await signIn(formData.email, formData.password);
       toast.success("Bem-vindo!");
-      // Small delay to ensure session is set before redirect
       setTimeout(() => {
         router.push("/");
       }, 500);
@@ -57,8 +56,7 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md">
         <div className="p-6 space-y-6">
           <div className="space-y-2 text-center">
             <h1 className="text-2xl font-bold text-foreground">Entrar</h1>
@@ -69,7 +67,10 @@ export default function SignInPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-foreground">
+              <label
+                htmlFor="email"
+                className="text-sm font-medium text-foreground"
+              >
                 Email
               </label>
               <Input
@@ -87,7 +88,10 @@ export default function SignInPage() {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium text-foreground">
+              <label
+                htmlFor="password"
+                className="text-sm font-medium text-foreground"
+              >
                 Senha
               </label>
               <Input
@@ -112,13 +116,15 @@ export default function SignInPage() {
           <div className="space-y-2 text-center text-sm">
             <p className="text-muted-foreground">
               Não tem uma conta?{" "}
-              <Link href="/auth/sign-up" className="text-primary hover:underline">
+              <Link
+                href="/auth/sign-up"
+                className="text-primary hover:underline"
+              >
                 Criar conta
               </Link>
             </p>
           </div>
         </div>
       </Card>
-    </div>
   );
 }

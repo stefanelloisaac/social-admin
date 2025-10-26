@@ -41,7 +41,7 @@ export default function FacebookPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background p-8 flex items-center justify-center">
-        <Loader fullscreen text="Carregando posts..." />
+        <Loader text="Carregando posts..." />
       </div>
     );
   }

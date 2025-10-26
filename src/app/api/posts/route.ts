@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDatabase } from "@/lib/db-init";
 import type { Platform } from "@/config/platforms";
-import type { CreatePostInput, UpdatePostInput, Post } from "@/types/post";
+import { Post } from "@/types/post";
 
-// Helper function to parse imageUrls from JSON string
 function parsePost(row: any): Post {
   return {
     ...row,
-    imageUrls: typeof row.imageUrls === "string" ? JSON.parse(row.imageUrls) : row.imageUrls,
+    imageUrls:
+      typeof row.imageUrls === "string"
+        ? JSON.parse(row.imageUrls)
+        : row.imageUrls,
   };
 }
 
@@ -20,7 +22,9 @@ export async function GET(request: NextRequest) {
     const db = getDatabase();
 
     if (id) {
-      const stmt = db.prepare("SELECT * FROM posts WHERE platform = ? AND id = ?");
+      const stmt = db.prepare(
+        "SELECT * FROM posts WHERE platform = ? AND id = ?"
+      );
       const post = stmt.get(platform, id);
       return NextResponse.json(post ? parsePost(post) : null);
     }
@@ -94,7 +98,8 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { platform, id, title, imageUrls, caption, status, scheduledDate } = body;
+    const { platform, id, title, imageUrls, caption, status, scheduledDate } =
+      body;
 
     const db = getDatabase();
     const now = new Date().toISOString();
@@ -121,7 +126,9 @@ export async function PUT(request: NextRequest) {
       id
     );
 
-    const getStmt = db.prepare("SELECT * FROM posts WHERE platform = ? AND id = ?");
+    const getStmt = db.prepare(
+      "SELECT * FROM posts WHERE platform = ? AND id = ?"
+    );
     const updated = getStmt.get(platform, id);
 
     return NextResponse.json(updated ? parsePost(updated) : null);

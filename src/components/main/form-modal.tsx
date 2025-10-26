@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import {
   Dialog,
@@ -33,7 +33,12 @@ import {
 } from "@/components/ui/select";
 import { ImageUploadWithCropper } from "@/components/main/image-upload-with-cropper";
 import { ImageCollagePreview } from "@/components/main/image-collage-preview";
-import type { Post, PostStatus, CreatePostInput, UpdatePostInput } from "@/types/post";
+import type {
+  Post,
+  PostStatus,
+  CreatePostInput,
+  UpdatePostInput,
+} from "@/types/post";
 
 interface FormModalProps {
   open: boolean;
@@ -65,9 +70,24 @@ export function FormModal({
     scheduledDate: post?.scheduledDate || "",
   });
 
+  useEffect(() => {
+    if (open) {
+      setFormData({
+        title: post?.title || "",
+        imageUrls: post?.imageUrls || [],
+        caption: post?.caption || "",
+        status: (post?.status || "draft") as PostStatus,
+        scheduledDate: post?.scheduledDate || "",
+      });
+    }
+  }, [open, post]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!(formData.title as string).trim() || !(formData.caption as string).trim()) {
+    if (
+      !(formData.title as string).trim() ||
+      !(formData.caption as string).trim()
+    ) {
       setAlertMessage("Por favor, preencha título e legenda");
       setAlertOpen(true);
       return;
@@ -128,9 +148,7 @@ export function FormModal({
           {platform === "instagram" || platform === "linkedin" ? (
             <ImageUploadWithCropper
               value={formData.imageUrls}
-              onChange={(imageUrls) =>
-                setFormData({ ...formData, imageUrls })
-              }
+              onChange={(imageUrls) => setFormData({ ...formData, imageUrls })}
               disabled={isReadOnly || isLoading}
               aspectRatio={platform === "instagram" ? 1 : 1.91}
               maxImages={platform === "instagram" ? 10 : 5}
@@ -144,7 +162,10 @@ export function FormModal({
                 placeholder="https://exemplo.com/imagem.jpg"
                 value={formData.imageUrls[0] || ""}
                 onChange={(e) =>
-                  setFormData({ ...formData, imageUrls: e.target.value ? [e.target.value] : [] })
+                  setFormData({
+                    ...formData,
+                    imageUrls: e.target.value ? [e.target.value] : [],
+                  })
                 }
                 disabled={isReadOnly || isLoading}
                 type="text"
@@ -247,7 +268,11 @@ export function FormModal({
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isLoading} className="relative flex-1">
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="relative flex-1"
+              >
                 {isLoading ? (
                   <>
                     <Loader size="sm" className="absolute left-2" />
